@@ -14,12 +14,19 @@ namespace TSShopping.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.HasDefaultSchema("Adm");
+
             modelBuilder.Entity<Country>()
             .HasIndex(x=>x.Name)
             .HasDatabaseName("IX_Country_Name")
             .IsUnique();
+
+            modelBuilder.Entity<Category>()
+            .HasIndex(x=>x.Name)
+            .HasDatabaseName("IX_Category_Name")
+            .IsUnique();
         }
 
         public DbSet<Country> Countries {get;set;}
+        public DbSet<Category> Categories {get;set;}
     }
 }
