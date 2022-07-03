@@ -1,20 +1,21 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace TSShopping.Data.Entities
 {
-    [Table("Countries",Schema="Sho")]
-    public class Country
+    [Table("Cities",Schema="Sho")]
+    public class City
     {
         public int Id { get; set; }
-        [Display(Name="País")]
+        [Display(Name="Ciudad")]
         [MaxLength(100,ErrorMessage="El campo {0} debe tener máximo {1} caractéres.")]
         [Required(ErrorMessage="El campo {0} es obligatorio.")]
         public string Name { get; set; }
 
-        public ICollection<State> States { get; set; }
-        
-        [Display(Name="Departamentos/Estados")]
-        public int StatesNumber=> States==null ? 0 : States.Count;
+        public State State { get; set; }
     }
 }

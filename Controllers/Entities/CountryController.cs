@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TSShopping.Data;
 using TSShopping.Data.Entities;
+using TSShopping.Models;
 
 namespace TSShopping.Controllers.Entities
 {
@@ -22,7 +23,7 @@ namespace TSShopping.Controllers.Entities
         // GET: Country
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Countries.ToListAsync());
+              return View(await _context.Countries.Include(x=>x.States).ToListAsync());
         }
 
         // GET: Country/Details/5
@@ -33,7 +34,7 @@ namespace TSShopping.Controllers.Entities
                 return NotFound();
             }
 
-            var country = await _context.Countries
+            var country = await _context.Countries.Include(x=>x.States)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (country == null)
             {
@@ -146,8 +147,9 @@ namespace TSShopping.Controllers.Entities
                 return NotFound();
             }
 
-            var country = await _context.Countries
+            var country = await _context.Countries.Include(x=>x.States)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (country == null)
             {
                 return NotFound();
@@ -175,9 +177,142 @@ namespace TSShopping.Controllers.Entities
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CountryExists(int id)
+        // private bool CountryExists(int id)
+        // {
+        //   return _context.Countries.Any(e => e.Id == id);
+        // }
+        public async Task<IActionResult> AddState(int? id)
         {
-          return _context.Countries.Any(e => e.Id == id);
+            if (id == null || _context.Countries == null)
+            {
+                return NotFound();
+            }
+
+            var country = await _context.Countries.FindAsync(id);
+
+            if (country == null)
+            {
+                return NotFound();
+            }
+
+            StateViewModel model=new StateViewModel(){
+                CountryId=country.Id
+            };
+
+
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddState([Bind("Id,Name,CountryId")] StateViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                State state=new State()
+                {
+                    Cities=new List<City>(),
+                    Country=await _context.Countries.FindAsync(model.CountryId),
+                    Name=model.Name
+                };
+
+                _context.Add(state);
+                
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Details),new {id=model.CountryId});                    
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un departamento/estado con el mismo nombre en este país.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(model);
+        }
+
+        // GET: Country/Edit/5
+        public async Task<IActionResult> EditState(int? id)
+        {
+            if (id == null || _context.Countries == null)
+            {
+                return NotFound();
+            }
+
+            State state = await _context.States
+                                        .Include(x=>x.Country)
+                                        .FirstOrDefaultAsync(x=>x.Id==id);
+            
+            if (state == null)
+            {
+                return NotFound();
+            }
+
+            StateViewModel model=new StateViewModel()
+            {
+                CountryId=state.Country.Id,
+                Id=state.Id,
+                Name=state.Name
+            }; 
+
+            return View(model);
+        }
+
+        // POST: Country/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditState(int id, StateViewModel state)
+        {
+            if (id != state.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    State model=new State()
+                    {
+                        Id=state.Id,
+                        Name=state.Name,
+
+                    };
+                    _context.Update(model);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Details), new{id=state.CountryId});
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
+                    {
+                        ModelState.AddModelError(string.Empty, "Ya existe un Departamento/estado con el mismo nombre en este país.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModelState.AddModelError(string.Empty, exception.Message);
+                }
+            }
+            return View(state);
         }
     }
 }

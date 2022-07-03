@@ -1,10 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace TSShopping.Data.Entities
+namespace TSShopping.Models
 {
-    [Table("Countries",Schema="Sho")]
-    public class Country
+    public class StateViewModel
     {
         public int Id { get; set; }
         [Display(Name="País")]
@@ -12,9 +14,7 @@ namespace TSShopping.Data.Entities
         [Required(ErrorMessage="El campo {0} es obligatorio.")]
         public string Name { get; set; }
 
-        public ICollection<State> States { get; set; }
+        public int CountryId { get; set; }
         
-        [Display(Name="Departamentos/Estados")]
-        public int StatesNumber=> States==null ? 0 : States.Count;
     }
 }

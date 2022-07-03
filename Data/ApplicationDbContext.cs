@@ -24,9 +24,21 @@ namespace TSShopping.Data
             .HasIndex(x=>x.Name)
             .HasDatabaseName("IX_Category_Name")
             .IsUnique();
+
+            modelBuilder.Entity<State>()
+            .HasIndex("CountryId", "Name")
+            .HasDatabaseName("IX_Country_State_Name")
+            .IsUnique();
+
+            modelBuilder.Entity<City>()
+            .HasIndex("StateId", "Name")
+            .HasDatabaseName("IX_State_City_Name")
+            .IsUnique();
         }
 
         public DbSet<Country> Countries {get;set;}
         public DbSet<Category> Categories {get;set;}
+        public DbSet<State> States {get;set;}
+        public DbSet<City> Cities {get;set;}
     }
 }
