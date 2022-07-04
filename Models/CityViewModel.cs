@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TSShopping.Data.Entities
+namespace TSShopping.Models
 {
-    [Table("Cities",Schema="Sho")]
-    public class City
+    public class CityViewModel
     {
         public int Id { get; set; }
         [Display(Name="Ciudad")]
@@ -16,8 +14,7 @@ namespace TSShopping.Data.Entities
         [Required(ErrorMessage="El campo {0} es obligatorio.")]
         public string Name { get; set; }
 
-        public State State { get; set; }
-
-        public ICollection<User> Users { get; set; }
+        public int StateId { get; set; }
+        
     }
 }

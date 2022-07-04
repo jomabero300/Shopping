@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TSShopping.Data.Entities;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace TSShopping.Data
 {
-    public class ApplicationDbContext: DbContext
+    public class ApplicationDbContext: IdentityDbContext<User>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             :base(options)
