@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TSShopping.Data.Entities;
+using TSShopping.Enum;
+using TSShopping.Helpers;
 
 namespace TSShopping.Data
 {
     public class SeedDb
     {
         private readonly ApplicationDbContext _context;
+        private readonly IUserHelper _userHelper;
 
-        public SeedDb(ApplicationDbContext context)
+        public SeedDb(ApplicationDbContext context, IUserHelper userHelper)
         {
             _context = context;
+            _userHelper = userHelper;
         }
 
         public async Task SeedAsync()
@@ -21,6 +25,45 @@ namespace TSShopping.Data
 
             await CheckCategoriesAsync();
             await CheckCountriesAsync();
+            await CheckRolesAsync();
+            await CheckUserAsync("1010", "Manuel", "Bello", "jomabero300@yopmail.com", "313 367 0740", "Calle Luna Calle Sol", UserType.Admin);
+            await CheckUserAsync("2020", "Marcos", "Suarez", "marcos301@yopmail.com", "318 210 8658", "Calle 20 nO 32-63", UserType.User);
+        }
+
+        private async Task<User> CheckUserAsync(    
+            string document,
+            string firstName,
+            string lastName,
+            string email,
+            string phone,
+            string address,
+            UserType userType)
+        {
+            User user=await _userHelper.GetUserAsync(email);
+            if(user==null)
+            {
+                user=new User(){
+                    UserName=email,
+                    Document=document,
+                    FirstName=firstName,
+                    LastName=lastName,
+                    Email=email,
+                    PhoneNumber=phone,
+                    Address=address,
+                    UserType=userType,
+                    City=_context.Cities.FirstOrDefault()
+                };
+                await _userHelper.AddUserAsync(user,"123456");
+                await _userHelper.AddUserToRoleAsync(user,userType.ToString());
+            }
+
+            return user;
+        }
+
+        private async Task CheckRolesAsync()
+        {
+            await _userHelper.CheckRoleAsync(UserType.Admin.ToString());
+            await _userHelper.CheckRoleAsync(UserType.User.ToString());
         }
 
         private async Task CheckCountriesAsync()
