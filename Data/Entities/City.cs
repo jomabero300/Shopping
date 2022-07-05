@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace TSShopping.Data.Entities
@@ -15,8 +16,9 @@ namespace TSShopping.Data.Entities
         [MaxLength(100,ErrorMessage="El campo {0} debe tener máximo {1} caractéres.")]
         [Required(ErrorMessage="El campo {0} es obligatorio.")]
         public string Name { get; set; }
-
-        public State State { get; set; }
+ 
+        [JsonIgnore]
+         public State State { get; set; }
 
         public ICollection<User> Users { get; set; }
     }

@@ -31,13 +31,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/NotAuthorized";
 });
 
-
 /*** Ciclo de vide de las inyecciones ***/
 
 //Se Utiliza (AddTransient) una sola vez
 builder.Services.AddTransient<SeedDb>();
 //Se utiliza (AddScoped) cada vez que lo necesita y lo destrue cuando lo termine
 builder.Services.AddScoped<IUserHelper,UserHelper>();
+builder.Services.AddScoped<ICombosHelper,CombosHelper>();
+builder.Services.AddScoped<IImageHelper,ImageHelper>();
 //Las (AddSingleton) inyecta y nunca se destruyen
 //builder.Services.AddSingleton<SeedDb>();
 
