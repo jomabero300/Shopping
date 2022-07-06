@@ -16,14 +16,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //TODO: make strongest password
 builder.Services.AddIdentity<User, IdentityRole>(cfg =>
 {
+    cfg.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
+    cfg.SignIn.RequireConfirmedEmail = true;
     cfg.User.RequireUniqueEmail = true;
     cfg.Password.RequireDigit = false;
     cfg.Password.RequiredUniqueChars = 0;
     cfg.Password.RequireLowercase = false;
     cfg.Password.RequireNonAlphanumeric = false;
     cfg.Password.RequireUppercase = false;
-    cfg.Password.RequiredLength = 6;
-}).AddEntityFrameworkStores<ApplicationDbContext>();
+    cfg.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    cfg.Lockout.MaxFailedAccessAttempts = 3;
+    cfg.Lockout.AllowedForNewUsers = true;
+})
+.AddDefaultTokenProviders()
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -39,6 +45,7 @@ builder.Services.AddTransient<SeedDb>();
 builder.Services.AddScoped<IUserHelper,UserHelper>();
 builder.Services.AddScoped<ICombosHelper,CombosHelper>();
 builder.Services.AddScoped<IImageHelper,ImageHelper>();
+builder.Services.AddScoped<IMailHelper,MailHelper>();
 //Las (AddSingleton) inyecta y nunca se destruyen
 //builder.Services.AddSingleton<SeedDb>();
 

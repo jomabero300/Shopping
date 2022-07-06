@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TSShopping.Common;
 using TSShopping.Data;
 using TSShopping.Data.Entities;
 using TSShopping.Enum;
@@ -22,13 +23,19 @@ namespace TSShopping.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ICombosHelper _combosHelper;
         private readonly IImageHelper _imageHelper;
+        private readonly IMailHelper _mailHelper;
 
-        public UsersController(IUserHelper userHelper,ApplicationDbContext context,ICombosHelper combosHelper, IImageHelper imageHelper)
+        public UsersController(IUserHelper userHelper,
+                               ApplicationDbContext context,
+                               ICombosHelper combosHelper, 
+                               IImageHelper imageHelper,
+                               IMailHelper mailHelper)
         {
             _userHelper = userHelper;
             _context = context;
             _combosHelper = combosHelper;
             _imageHelper = imageHelper;
+            _mailHelper = mailHelper;
         }
 
         public async Task<IActionResult> Index()
@@ -77,29 +84,28 @@ namespace TSShopping.Controllers
                     model.Cities = await _combosHelper.GetComboCitiesAsync(model.StateId);
                     return View(model);
                 }
-                return RedirectToAction("Index");          
-                // string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
-                // string tokenLink = Url.Action("ConfirmEmail", "Account", new
-                // {
-                //     userid = user.Id,
-                //     token = myToken
-                // }, protocol: HttpContext.Request.Scheme);
 
-                // Response response = _mailHelper.SendMail(
-                //     $"{model.FirstName} {model.LastName}",
-                //     model.Username,
-                //     "Shopping - Confirmación de Email",
-                //     $"<h1>Shopping - Confirmación de Email</h1>" +
-                //         $"Para habilitar el usuario por favor hacer click en el siguiente link:, " +
-                //         $"<hr/><br/><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
-                // if (response.IsSuccess)
-                // {
-                //     ViewBag.Message = "Las instrucciones para habilitar el administrador han sido enviadas al correo.";
-                //     return View(model);
-                // }
+                string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+                string tokenLink = Url.Action("ConfirmEmail", "Account", new
+                {
+                    userid = user.Id,
+                    token = myToken
+                }, protocol: HttpContext.Request.Scheme);
 
-                // ModelState.AddModelError(string.Empty, response.Message);
- 
+                Response response = _mailHelper.SendMail(
+                    model.Username,
+                    "Shopping - Confirmación de Email",
+                    $"<h1>Shopping - Confirmación de Email</h1>" +
+                        $"Para habilitar el usuario por favor hacer click en el siguiente link:, " +
+                        $"<hr/><br/><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
+
+                if (response.Succeeded)
+                {
+                    ViewBag.Message = "Las instrucciones para habilitar el administrador han sido enviadas al correo.";
+                    return View(model);
+                }
+
+                ModelState.AddModelError(string.Empty, response.Message);
                 
             }
 
