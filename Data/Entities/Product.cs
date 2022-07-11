@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TSShopping.Data.Entities
 {
+    [Table("Products",Schema="Sho")]
     public class Product
     {
         public int Id { get; set; }
@@ -28,21 +29,21 @@ namespace TSShopping.Data.Entities
         [Required(ErrorMessage = "El campo {0} es obligatorio.")]
         public float Stock { get; set; }
 
-        // public ICollection<ProductCategory> ProductCategories { get; set; }
+        public ICollection<ProductCategory> ProductCategories { get; set; }
 
-        // [Display(Name = "Categorías")]
-        // public int CategoriesNumber => ProductCategories == null ? 0 : ProductCategories.Count;
+        [Display(Name = "Categorías")]
+        public int CategoriesNumber => ProductCategories == null ? 0 : ProductCategories.Count;
 
-        // public ICollection<ProductImage> ProductImages { get; set; }
+        public ICollection<ProductImage> ProductImages { get; set; }
 
-        // [Display(Name = "Fotos")]
-        // public int ImagesNumber => ProductImages == null ? 0 : ProductImages.Count;
+        [Display(Name = "Fotos")]
+        public int ImagesNumber => ProductImages == null ? 0 : ProductImages.Count;
 
-        // //TODO: Pending to change to the correct path
-        // [Display(Name = "Foto")]
-        // public string ImageFullPath => ProductImages == null || ProductImages.Count == 0
-        //     ? $"https://localhost:7057/images/noimage.png"
-        //     : ProductImages.FirstOrDefault().ImageFullPath;
+        //TODO: Pending to change to the correct path
+        [Display(Name = "Foto")]
+        public string ImageFullPath => ProductImages == null || ProductImages.Count == 0
+            ? $"https://localhost:7266/images/noimage.png"
+            : ProductImages.FirstOrDefault().ImageFullPath;
         
     }
 }
