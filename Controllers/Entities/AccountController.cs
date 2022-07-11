@@ -138,11 +138,11 @@ namespace TSShopping.Controllers.Entities
                     $"<h1>Shopping - Confirmación de cuenta</h1>" +
                     $"Para habilitar el usuario por favor hacer click en el siguiente enlace:, " +
                     $"<hr/><br/><p><a href = \"{HtmlEncoder.Default.Encode(tokenLink)}\">Confirmar Email</a></p>");
-
+//HtmlEncoder.Default.Encode()
                 if (response.Succeeded)
                 {
                     //_flashMessage.Info("Usuario registrado. Para poder ingresar al sistema, siga las instrucciones que han sido enviadas a su correo.");
-                    ViewBag.Message = "Usuario registrado. Para poder ingresar al sistema, siga las instrucciones que han sido enviadas a su correo.";
+                    ViewBag.Message = "Usuario registrado. Para poder ingresar al sistema, para gabilitar el administrador siga las instrucciones que han sido enviadas a su correo.";
                     return View(model);
                     //return RedirectToAction(nameof(Login));
                 }
