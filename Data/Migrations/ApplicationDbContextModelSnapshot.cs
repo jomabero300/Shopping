@@ -331,6 +331,35 @@ namespace TSShopping.Data.Migrations
                     b.ToTable("States", "Sho");
                 });
 
+            modelBuilder.Entity("TSShopping.Data.Entities.TemporalSale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TemporalSales", "Sho");
+                });
+
             modelBuilder.Entity("TSShopping.Data.Entities.User", b =>
                 {
                     b.Property<string>("Id")
@@ -518,6 +547,21 @@ namespace TSShopping.Data.Migrations
                         .HasForeignKey("CountryId");
 
                     b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("TSShopping.Data.Entities.TemporalSale", b =>
+                {
+                    b.HasOne("TSShopping.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId");
+
+                    b.HasOne("TSShopping.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TSShopping.Data.Entities.User", b =>
