@@ -29,8 +29,12 @@ namespace TSShopping.Data
             await CheckProductsAsync();
             await CheckCountriesAsync();
             await CheckRolesAsync();
-            await CheckUserAsync("1010", "Manuel", "Bello", "jomabero300@yopmail.com", "313 367 0740", "Calle Luna Calle Sol", UserType.Admin);
-            await CheckUserAsync("2020", "Marcos", "Suarez", "marcos301@yopmail.com", "318 210 8658", "Calle 20 nO 32-63", UserType.User);
+            await CheckUserAsync("1010", "Manuel", "Bello", "jomabero300@yopmail.com", "313 367 0740", "Calle Luna Calle Sol","" ,UserType.Admin);
+            await CheckUserAsync("2020", "Marcos", "Suarez", "marcos301@yopmail.com", "318 210 8658", "Calle 20 nO 32-63", "", UserType.User);
+            await CheckUserAsync("2020", "Ledys", "Bedoya", "ledys@yopmail.com", "322 311 4620", "Calle Luna Calle Sol", "LedysBedoya.jpeg", UserType.User);
+            await CheckUserAsync("3030", "Brad", "Pitt", "brad@yopmail.com", "322 311 4620", "Calle Luna Calle Sol", "Brad.jpg", UserType.User);
+            await CheckUserAsync("4040", "Angelina", "Jolie", "angelina@yopmail.com", "322 311 4620", "Calle Luna Calle Sol", "Angelina.jpg", UserType.User);
+
         }
 
         private async Task CheckProductsAsync()
@@ -73,11 +77,25 @@ namespace TSShopping.Data
             string email,
             string phone,
             string address,
+            string image,
             UserType userType)
         {
             User user=await _userHelper.GetUserAsync(email);
             if(user==null)
             {
+                Guid imageId = Guid.Empty;
+                if(image != "")
+                {
+                    string filepath = $"{Environment.CurrentDirectory}\\wwwroot\\images\\imagesTemp\\users\\{image}";
+
+                    FileStream stream = System.IO.File.OpenRead(filepath);
+
+                    IFormFileTemp model=new IFormFileTemp {ImagenIFF=new FormFile(stream,0,stream.Length, null, Path.GetFileName(stream.Name))};
+                    
+                    imageId = await _imageHelper.UploadImageAsync(model.ImagenIFF, "images/users");
+
+                    //imageId=await _blobHelper.UploadBlobAsync($"{Environment.CurrentDirectory}\\wwwroot\\images\\users\\{image}", "users");
+                }
                 user=new User(){
                     UserName=email,
                     Document=document,
@@ -86,6 +104,7 @@ namespace TSShopping.Data
                     Email=email,
                     PhoneNumber=phone,
                     Address=address,
+                    ImageId = imageId,
                     UserType=userType,
                     City=_context.Cities.FirstOrDefault()
                 };
@@ -271,9 +290,7 @@ namespace TSShopping.Data
             foreach (string category in categories)
             {
                 prodcut.ProductCategories.Add(new ProductCategory { Category = await _context.Categories.FirstOrDefaultAsync(c => c.Name == category) });
-            }
-
-            
+            }            
 
             foreach (string image in images)
             {

@@ -41,6 +41,10 @@
                                     asp-action="Index">Paises</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Orders"
+                                    asp-action="Index">Pedidos</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-white" asp-area="" asp-controller="Products"
                                     asp-action="Index">Productos</a>
                             </li>
@@ -49,6 +53,13 @@
                                     asp-action="Index">Usuarios</a>
                             </li>
                         }
+                        @if (User.Identity.IsAuthenticated && User.IsInRole("User"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Orders" asp-action="MyOrders">Mis Pedidos</a>
+                            </li>
+                        }
+
                     </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -87,6 +98,7 @@
             &copy; 2022 - TSShopping - <a asp-area="" asp-controller="Home" asp-action="Privacy">Políticas de privacidad</a>
         </div>
     </footer>
+    <script src="~/js/CustomJS.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

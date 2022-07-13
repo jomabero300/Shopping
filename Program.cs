@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TSShopping.Data;
 using TSShopping.Data.Entities;
 using TSShopping.Helpers;
+using Vereyon.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 //Se Utiliza (AddTransient) una sola vez
 builder.Services.AddTransient<SeedDb>();
+builder.Services.AddFlashMessage();
 //Se utiliza (AddScoped) cada vez que lo necesita y lo destrue cuando lo termine
 builder.Services.AddScoped<IUserHelper,UserHelper>();
 builder.Services.AddScoped<ICombosHelper,CombosHelper>();

@@ -13,6 +13,7 @@ using TSShopping.Data.Entities;
 using TSShopping.Enum;
 using TSShopping.Helpers;
 using TSShopping.Models;
+using Vereyon.Web;
 
 namespace TSShopping.Controllers
 {
@@ -24,18 +25,21 @@ namespace TSShopping.Controllers
         private readonly ICombosHelper _combosHelper;
         private readonly IImageHelper _imageHelper;
         private readonly IMailHelper _mailHelper;
+        private readonly IFlashMessage _flashMessage;
 
         public UsersController(IUserHelper userHelper,
                                ApplicationDbContext context,
                                ICombosHelper combosHelper, 
                                IImageHelper imageHelper,
-                               IMailHelper mailHelper)
+                               IMailHelper mailHelper,
+                               IFlashMessage flashMessage)
         {
             _userHelper = userHelper;
             _context = context;
             _combosHelper = combosHelper;
             _imageHelper = imageHelper;
             _mailHelper = mailHelper;
+            _flashMessage = flashMessage;
         }
 
         public async Task<IActionResult> Index()
@@ -78,7 +82,7 @@ namespace TSShopping.Controllers
                 User user = await _userHelper.AddUserAsync(model);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Este correo ya está siendo usado.");
+                    _flashMessage.Danger("Este correo ya está siendo usado.");
                     model.Countries = await _combosHelper.GetComboCountriesAsync();
                     model.States = await _combosHelper.GetComboStatesAsync(model.CountryId);
                     model.Cities = await _combosHelper.GetComboCitiesAsync(model.StateId);
@@ -101,12 +105,11 @@ namespace TSShopping.Controllers
 
                 if (response.Succeeded)
                 {
-                    ViewBag.Message = "Las instrucciones para habilitar el administrador han sido enviadas al correo.";
+                    //ViewBag.Message = "Las instrucciones para habilitar el administrador han sido enviadas al correo.";
+                    _flashMessage.Danger("Las instrucciones para habilitar el administrador han sido enviadas al correo.");
                     return View(model);
                 }
-
-                ModelState.AddModelError(string.Empty, response.Message);
-                
+                _flashMessage.Danger(response.Message);                
             }
 
             model.Countries = await _combosHelper.GetComboCountriesAsync();

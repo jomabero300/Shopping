@@ -11,6 +11,7 @@ using TSShopping.Data;
 using TSShopping.Data.Entities;
 using TSShopping.Helpers;
 using TSShopping.Models;
+using Vereyon.Web;
 
 namespace TSShopping.Controllers.Entities
 {
@@ -20,12 +21,17 @@ namespace TSShopping.Controllers.Entities
         private readonly ApplicationDbContext _context;
         private readonly IImageHelper _imageHelper;
         private readonly ICombosHelper _combosHelper;
+        private readonly IFlashMessage _flashMessage;
 
-        public ProductsController(ApplicationDbContext context, IImageHelper imageHelper, ICombosHelper combosHelper)
+        public ProductsController(ApplicationDbContext context, 
+                                IImageHelper imageHelper, 
+                                ICombosHelper combosHelper,
+                                IFlashMessage flashMessage)
         {
             _context = context;
             _imageHelper = imageHelper;
             _combosHelper = combosHelper;
+            _flashMessage = flashMessage;
         }
 
         public async Task<IActionResult> Index()
@@ -107,22 +113,23 @@ namespace TSShopping.Controllers.Entities
                 {
                     _context.Add(product);
                     await _context.SaveChangesAsync();
+                    TempData["AlertMessage"]="Producto creado con exito...";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplica"))
                     {
-                        ModelState.AddModelError(string.Empty, "Ya existe un producto con el mismo nombre.");
+                        _flashMessage.Danger("Ya existe un producto con el mismo nombre.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
 
@@ -173,22 +180,23 @@ namespace TSShopping.Controllers.Entities
                 product.Stock = model.Stock;
                 _context.Update(product);
                 await _context.SaveChangesAsync();
+                TempData["AlertMessage"]="Producto modificado con exito...";
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateException dbUpdateException)
             {
                 if (dbUpdateException.InnerException.Message.Contains("duplicate"))
                 {
-                    ModelState.AddModelError(string.Empty, "Ya existe un producto con el mismo nombre.");
+                    _flashMessage.Danger("Ya existe un producto con el mismo nombre.");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                    _flashMessage.Danger(dbUpdateException.InnerException.Message);
                 }
             }
             catch (Exception exception)
             {
-                ModelState.AddModelError(string.Empty, exception.Message);
+                _flashMessage.Danger(exception.Message);
             }
 
             return View(model);
@@ -242,7 +250,7 @@ namespace TSShopping.Controllers.Entities
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }
             }
 
@@ -325,16 +333,16 @@ namespace TSShopping.Controllers.Entities
                 {
                     if (dbUpdateException.InnerException.Message.Contains("duplica"))
                     {
-                        ModelState.AddModelError(string.Empty, "Esta categoría ya esta asignada a este producto.");
+                        _flashMessage.Danger("Esta categoría ya esta asignada a este producto.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, dbUpdateException.InnerException.Message);
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
                 }
                 catch (Exception exception)
                 {
-                    ModelState.AddModelError(string.Empty, exception.Message);
+                    _flashMessage.Danger(exception.Message);
                 }            
             }
 
@@ -411,6 +419,7 @@ namespace TSShopping.Controllers.Entities
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+            _flashMessage.Danger("Registro borrado con exito..!");
             return RedirectToAction(nameof(Index));
         }
 

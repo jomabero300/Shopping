@@ -14,6 +14,7 @@ using TSShopping.Data.Entities;
 using TSShopping.Enum;
 using TSShopping.Helpers;
 using TSShopping.Models;
+using Vereyon.Web;
 
 namespace TSShopping.Controllers.Entities
 {
@@ -24,18 +25,21 @@ namespace TSShopping.Controllers.Entities
         private readonly ICombosHelper _combosHelper;
         private readonly IImageHelper _imageHelper;
         private readonly IMailHelper _mailHelper;
+        private readonly IFlashMessage _flashMessage;
 
         public AccountController(IUserHelper userHelper,
                                  ApplicationDbContext context,
                                  ICombosHelper combosHelper, 
                                  IImageHelper imageHelper,
-                                 IMailHelper mailHelper)
+                                 IMailHelper mailHelper,
+                                 IFlashMessage flashMessage)
         {
             _userHelper = userHelper;
             _context = context;
             _combosHelper = combosHelper;
             _imageHelper = imageHelper;
             _mailHelper = mailHelper;
+            _flashMessage = flashMessage;
         }
         // GET: Login
         public IActionResult Login()
@@ -62,15 +66,15 @@ namespace TSShopping.Controllers.Entities
 
                 if (result.IsLockedOut)
                 {
-                    ModelState.AddModelError(string.Empty, "Ha superado el máximo número de intentos, su cuenta está bloqueada, intente de nuevo en 5 minutos.");
+                    _flashMessage.Danger("Ha superado el máximo número de intentos, su cuenta está bloqueada, intente de nuevo en 5 minutos.");                    
                 }
                 else if(result.IsNotAllowed)
                 {
-                    ModelState.AddModelError(string.Empty, "El usuario no ha sido habilitado, debes de seguir las instrucciones del correo enviado para poder habilitarte en el sistemas.");
+                    _flashMessage.Danger("El usuario no ha sido habilitado, debes de seguir las instrucciones enviadas al correo para poder habilitarlo.");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Email o contraseña incorrectos.");
+                    _flashMessage.Danger("Email o contraseña incorrectos.");
                 }
             }
 
@@ -116,9 +120,7 @@ namespace TSShopping.Controllers.Entities
 
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty,"Este correo ya está siendo usado");
-
-                //     _flashMessage.Danger("Este correo ya está siendo usado.");
+                    _flashMessage.Danger("Este correo ya está siendo usado.");
                     model.Countries = await _combosHelper.GetComboCountriesAsync();
                     model.States = await _combosHelper.GetComboStatesAsync(model.CountryId);
                     model.Cities = await _combosHelper.GetComboCitiesAsync(model.StateId);
@@ -141,13 +143,13 @@ namespace TSShopping.Controllers.Entities
 //HtmlEncoder.Default.Encode()
                 if (response.Succeeded)
                 {
-                    //_flashMessage.Info("Usuario registrado. Para poder ingresar al sistema, siga las instrucciones que han sido enviadas a su correo.");
-                    ViewBag.Message = "Usuario registrado. Para poder ingresar al sistema, para gabilitar el administrador siga las instrucciones que han sido enviadas a su correo.";
-                    return View(model);
-                    //return RedirectToAction(nameof(Login));
+                    // ViewBag.Message = "Usuario registrado. Para poder ingresar al sistema, para gabilitar el administrador siga las instrucciones que han sido enviadas a su correo.";
+                    // return View(model);
+                    _flashMessage.Info("Usuario registrado. Para poder ingresar al sistema, siga las instrucciones que han sido enviadas a su correo.");
+                    return RedirectToAction(nameof(Login));
                 }
 
-                ModelState.AddModelError(string.Empty, response.Message);
+                _flashMessage.Danger(response.Message);
 
 
                 // LoginViewModel log=new LoginViewModel()
@@ -274,21 +276,22 @@ namespace TSShopping.Controllers.Entities
 
                         if (result.Succeeded)
                         {
+                            _flashMessage.Info("Su contraseña ha sido cambiada con éxito.");
                             return RedirectToAction("ChangeUser");
                         }
                         else
                         {
-                            ModelState.AddModelError(string.Empty, result.Errors.FirstOrDefault().Description);
+                            _flashMessage.Info(result.Errors.FirstOrDefault().Description);
                         }
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, "User no found.");
+                        _flashMessage.Info("User no found.");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Debes ingresar una contraseña diferente.");
+                    _flashMessage.Info("Debes ingresar una contraseña diferente.");
                 }
             }
 
@@ -330,7 +333,7 @@ namespace TSShopping.Controllers.Entities
                 User user = await _userHelper.GetUserAsync(model.Email);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "El email no corresponde a ningún usuario registrado.");
+                    _flashMessage.Danger("El email no corresponde a ningún usuario registrado.");
                     return View(model);
                 }
 
@@ -345,8 +348,11 @@ namespace TSShopping.Controllers.Entities
                     $"<h1>Shopping - Recuperación de Contraseña</h1>" +
                     $"Para recuperar la contraseña haga click en el siguiente enlace:" +
                     $"<p><a href = \"{link}\">Reset Password</a></p>");
-                ViewBag.Message = "Las instrucciones para recuperar la contraseña han sido enviadas a su correo.";
-                return View();
+                // ViewBag.Message = "Las instrucciones para recuperar la contraseña han sido enviadas a su correo.";
+                // return View();
+                _flashMessage.Info("Las instrucciones para recuperar la contraseña han sido enviadas a su correo.");
+                return RedirectToAction(nameof(Login));
+
             }
 
             return View(model);
@@ -366,15 +372,20 @@ namespace TSShopping.Controllers.Entities
                 IdentityResult result = await _userHelper.ResetPasswordAsync(user, model.Token, model.Password);
                 if (result.Succeeded)
                 {
-                    ViewBag.Message = "Contraseña cambiada con éxito.";
-                    return View();
+                    _flashMessage.Info("Contraseña cambiada con éxito.");
+                    return RedirectToAction(nameof(Login));
+                    // ViewBag.Message = "Contraseña cambiada con éxito.";
+                    // return View();
                 }
-
-                ViewBag.Message = "Error cambiando la contraseña.";
-                return View(model);
+                // ViewBag.Message = "Error cambiando la contraseña.";
+                 _flashMessage.Danger("Error cambiando la contraseña.");
+            }
+            else
+            {
+             _flashMessage.Danger("Usuario no encontrado.");
             }
 
-            ViewBag.Message = "Usuario no encontrado.";
+            //ViewBag.Message = "Usuario no encontrado.";
             return View(model);
         }
 
