@@ -7,6 +7,7 @@ using TSShopping.Data;
 using TSShopping.Data.Entities;
 using TSShopping.Helpers;
 using TSShopping.Models;
+using Vereyon.Web;
 
 namespace TSShopping.Controllers;
 
@@ -16,18 +17,22 @@ public class HomeController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IUserHelper _userHelper;
     private readonly IOrdersHelper _ordersHelper;
+    private readonly IFlashMessage _flashMessage;
 
     public HomeController(ILogger<HomeController> logger,
-    ApplicationDbContext context, IUserHelper userHelper,
-    IOrdersHelper ordersHelper)
+                            ApplicationDbContext context, 
+                            IUserHelper userHelper,
+                            IOrdersHelper ordersHelper,
+                            IFlashMessage flashMessage)
     {
         _logger = logger;
         _context = context;
         _userHelper = userHelper;
         _ordersHelper = ordersHelper;
+        _flashMessage = flashMessage;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string sortOrder)
     {
         List<Product> products = await _context.Products
             .Include(p => p.ProductImages)
@@ -221,7 +226,7 @@ public class HomeController : Controller
             return RedirectToAction(nameof(OrderSuccess));
         }
 
-        ModelState.AddModelError(string.Empty, response.Message);
+        _flashMessage.Danger( response.Message);
         return View(model);
     }
 
@@ -269,7 +274,7 @@ public class HomeController : Controller
             }
             catch (Exception exception)
             {
-                ModelState.AddModelError(string.Empty, exception.Message);
+                _flashMessage.Danger(exception.Message);
                 return View(model);
             }
 
