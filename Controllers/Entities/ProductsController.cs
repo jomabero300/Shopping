@@ -221,7 +221,7 @@ namespace TSShopping.Controllers.Entities
         }
 
 
-
+        [NoDirectAccess]
         public async Task<IActionResult> AddImage(int? id)
         {
             if (id == null)
@@ -266,15 +266,23 @@ namespace TSShopping.Controllers.Entities
                 {
                     _context.Add(productImage);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details), new { Id = product.Id });
+                    _flashMessage.Confirmation("Registro creado.");
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "Details", _context.Products
+                            .Include(p => p.ProductImages)
+                            .Include(p => p.ProductCategories)
+                            .ThenInclude(pc => pc.Category)
+                            .FirstOrDefaultAsync(p => p.Id == model.ProductId))
+                    });
                 }
                 catch (Exception exception)
                 {
                     _flashMessage.Danger(exception.Message);
                 }
             }
-
-            return View(model);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddImage", model) });
         }
         public async Task<IActionResult> DeleteImage(int? id)
         {
@@ -295,9 +303,11 @@ namespace TSShopping.Controllers.Entities
 
             _context.ProductImages.Remove(productImage);
             await _context.SaveChangesAsync();
+            _flashMessage.Danger("Registro borrado.");
             return RedirectToAction(nameof(Details), new { Id = productImage.Product.Id });
         }
 
+        [NoDirectAccess]
         public async Task<IActionResult> AddCategory(int? id)
         {
             if (id == null)
@@ -347,7 +357,15 @@ namespace TSShopping.Controllers.Entities
                 {
                     _context.Add(productCategory);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details), new { Id = product.Id });
+                    return Json(new
+                    {
+                        isValid = true,
+                        html = ModalHelper.RenderRazorViewToString(this, "Details", _context.Products
+                            .Include(p => p.ProductImages)
+                            .Include(p => p.ProductCategories)
+                            .ThenInclude(pc => pc.Category)
+                            .FirstOrDefaultAsync(p => p.Id == model.ProductId))
+                    });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -377,11 +395,9 @@ namespace TSShopping.Controllers.Entities
                 Name = pc.Category.Name
             }).ToList();
 
-
-
             model.Categories = await _combosHelper.GetComboCategoriesAsync(Categoryfilter);
 
-            return View(model);
+             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddCategory", model) });
         }
 
         public async Task<IActionResult> DeleteCategory(int? id)
@@ -398,11 +414,20 @@ namespace TSShopping.Controllers.Entities
             {
                 return NotFound();
             }
-
             _context.ProductCategories.Remove(productCategory);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+                _flashMessage.Danger("Registro borrado.");
+            }
+            catch 
+            {
+                _flashMessage.Danger("No se puede borrar la ciudad porque tiene registros relacionados.");
+            }
             return RedirectToAction(nameof(Details), new { Id = productCategory.Product.Id });
         }
+
+
         [NoDirectAccess]
         public async Task<IActionResult> Delete(int id)
         {
