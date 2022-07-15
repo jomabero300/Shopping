@@ -52,11 +52,11 @@ namespace TSShopping.Helpers
                     mail.Dispose();
                 }
 
-                return new Response { Succeeded = true };
+                return new Response { IsSuccess = true };
             }
             catch (Exception ex)
             {
-                return new Response { Succeeded = false, Message = ex.Message };
+                return new Response { IsSuccess = false, Message = ex.Message };
             }
         }
     }

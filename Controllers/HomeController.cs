@@ -267,7 +267,7 @@ public class HomeController : Controller
             .ToListAsync();
 
         Response response = await _ordersHelper.ProcessOrderAsync(model);
-        if (response.Succeeded)
+        if (response.IsSuccess)
         {
             return RedirectToAction(nameof(OrderSuccess));
         }

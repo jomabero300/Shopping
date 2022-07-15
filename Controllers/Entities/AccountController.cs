@@ -141,7 +141,7 @@ namespace TSShopping.Controllers.Entities
                     $"Para habilitar el usuario por favor hacer click en el siguiente enlace:, " +
                     $"<hr/><br/><p><a href = \"{HtmlEncoder.Default.Encode(tokenLink)}\">Confirmar Email</a></p>");
 //HtmlEncoder.Default.Encode()
-                if (response.Succeeded)
+                if (response.IsSuccess)
                 {
                     // ViewBag.Message = "Usuario registrado. Para poder ingresar al sistema, para gabilitar el administrador siga las instrucciones que han sido enviadas a su correo.";
                     // return View(model);
@@ -160,7 +160,7 @@ namespace TSShopping.Controllers.Entities
                 // };
 
                 // var result2=await _userHelper.LoginAsync(log);
-                // if(result2.Succeeded)
+                // if(result2.IsSuccess)
                 // {
                 //     return RedirectToAction("Index","Home");
                 // }

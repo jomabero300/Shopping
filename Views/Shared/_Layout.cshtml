@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
     <link rel="stylesheet" href="~/lib/datatables/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="~/lib/jqueryui/jquery-ui.min.css" />
-    
+    <link rel="stylesheet" href="~/lib/jasny-bootstrap/css/jasny-bootstrap.min.css">
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TSShopping.styles.css" asp-append-version="true" />
     @* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"> *@
@@ -109,18 +110,20 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <script src="~/lib/jasny-bootstrap/jasny-bootstrap.min.js"></script>
+    <script src="~/js/showmodal.js"></script>
+
+    <script src="~/lib/jasny-bootstrap/js/jasny-bootstrap.min.js"></script>
     <script src="~/lib/datatables/js/jquery.dataTables.min.js"></script>
     <script src="~/lib/jqueryui/jquery-ui.min.js"></script>
     <script src="~/font-awesome/js/all.min.js"></script>
-
     <script>
-        function displayBusyIndicator(){
+        function displayBusyIndicator() {
             $('.loading').show();
         }
     </script>
+
     <script>
-        $(window).om('beforeunload',function(){
+        $(window).on('beforeunload',function(){
             displayBusyIndicator();
         })
     </script>

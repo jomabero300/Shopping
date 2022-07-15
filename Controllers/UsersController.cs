@@ -103,7 +103,7 @@ namespace TSShopping.Controllers
                         $"Para habilitar el usuario por favor hacer click en el siguiente link:, " +
                         $"<hr/><br/><p><a href = \"{tokenLink}\">Confirmar Email</a></p>");
 
-                if (response.Succeeded)
+                if (response.IsSuccess)
                 {
                     //ViewBag.Message = "Las instrucciones para habilitar el administrador han sido enviadas al correo.";
                     _flashMessage.Danger("Las instrucciones para habilitar el administrador han sido enviadas al correo.");

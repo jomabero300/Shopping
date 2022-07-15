@@ -49,6 +49,7 @@ builder.Services.AddScoped<ICombosHelper,CombosHelper>();
 builder.Services.AddScoped<IImageHelper,ImageHelper>();
 builder.Services.AddScoped<IMailHelper,MailHelper>();
 builder.Services.AddScoped<IOrdersHelper,OrdersHelper>();
+builder.Services.AddScoped<IApiService,ApiService>();
 //Las (AddSingleton) inyecta y nunca se destruyen
 //builder.Services.AddSingleton<SeedDb>();
 

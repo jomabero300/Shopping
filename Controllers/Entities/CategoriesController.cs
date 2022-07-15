@@ -30,27 +30,11 @@ namespace TSShopping.Controllers.Entities
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories.Include(c=>c.ProductCategories).ToListAsync());
+            return View(await _context.Categories
+                        .Include(c=>c.ProductCategories)
+                        .ToListAsync());
         }
-        // GET: Category/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Categories == null)
-            {
-                return NotFound();
-            }
-
-            var model = await _context.Categories
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (model == null)
-            {
-                return NotFound();
-            }
-
-            return View(model);
-        }        
-         // GET: Country/Create
-
+        // GET: Category/Delete/5
         [NoDirectAccess]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -108,10 +92,20 @@ namespace TSShopping.Controllers.Entities
                         await _context.SaveChangesAsync();
                         _flashMessage.Info("Registro actualizado.");
                     }
+                    
+                    return Json(new 
+                    { 
+                        isValid = true, 
+                        html = ModalHelper.RenderRazorViewToString(
+                            this, 
+                            "_ViewAll", 
+                            _context.Categories.Include(c => c.ProductCategories).ToList())
+                    });                    
+
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
-                    if (dbUpdateException.InnerException.Message.Contains("duplicate"))
+                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
                     {
                         _flashMessage.Danger("Ya existe una categoría con el mismo nombre.");
                     }
@@ -119,16 +113,11 @@ namespace TSShopping.Controllers.Entities
                     {
                         _flashMessage.Danger(dbUpdateException.InnerException.Message);
                     }
-                    return View(category);
                 }
                 catch (Exception exception)
                 {
                     _flashMessage.Danger(exception.Message);
-                    return View(category);
                 }
-
-                return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAll", _context.Categories.Include(c => c.ProductCategories).ToList()) });
-
             }
 
             return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", category) });

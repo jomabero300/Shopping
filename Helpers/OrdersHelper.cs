@@ -38,13 +38,13 @@ namespace TSShopping.Helpers
 
             sale.OrderStatus = OrderStatus.Cancelado;
             await _context.SaveChangesAsync();
-            return new Response { Succeeded = true };
+            return new Response { IsSuccess = true };
         }
 
         public async Task<Response> ProcessOrderAsync(ShowCartViewModel model)
         {
             Response response = await CheckInventoryAsync(model);
-            if (!response.Succeeded)
+            if (!response.IsSuccess)
             {
                 return response;
             }
@@ -83,19 +83,19 @@ namespace TSShopping.Helpers
         }
         private async Task<Response> CheckInventoryAsync(ShowCartViewModel model)
         {
-            Response response = new() { Succeeded = true };
+            Response response = new() { IsSuccess = true };
             foreach (TemporalSale item in model.TemporalSales)
             {
                 Product product = await _context.Products.FindAsync(item.Product.Id);
                 if (product == null)
                 {
-                    response.Succeeded = false;
+                    response.IsSuccess = false;
                     response.Message = $"El producto {item.Product.Name}, ya no está disponible";
                     return response;
                 }
                 if (product.Stock < item.Quantity)
                 {
-                    response.Succeeded = false;
+                    response.IsSuccess = false;
                     response.Message = $"Lo sentimos no tenemos existencias suficientes del producto {item.Product.Name}, para tomar su pedido. Por favor disminuir la cantidad o sustituirlo por otro.";
                     return response;
                 }

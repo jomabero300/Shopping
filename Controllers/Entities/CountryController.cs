@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TSShopping.Data;
 using TSShopping.Data.Entities;
+using TSShopping.Helpers;
 using TSShopping.Models;
 using Vereyon.Web;
+using static TSShopping.Helpers.ModalHelper;
 
 namespace TSShopping.Controllers.Entities
 {
@@ -29,7 +31,109 @@ namespace TSShopping.Controllers.Entities
         // GET: Country
         public async Task<IActionResult> Index()
         {
-              return View(await _context.Countries.Include(x=>x.States).ToListAsync());
+              return View(await _context.Countries
+                                .Include(x=>x.States)
+                                .ThenInclude(s=>s.Cities)
+                                .ToListAsync());
+        }
+
+        [NoDirectAccess]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Country country = await _context.Countries.FirstOrDefaultAsync(c => c.Id == id);
+            if (country == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _context.Countries.Remove(country);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Registro borrado.");
+            }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el país porque tiene registros relacionados.");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [NoDirectAccess]
+        public async Task<IActionResult> AddOrEdit(int id = 0)
+        {
+            if (id == 0)
+            {
+                return View(new Country());
+            }
+            else
+            {
+                Country country = await _context.Countries.FindAsync(id);
+                if (country == null)
+                {
+                    return NotFound();
+                }
+
+                return View(country);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddOrEdit(int id, Country country)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (id == 0) //Insert
+                    {
+                        _context.Add(country);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro creado.");
+                    }
+                    else //Update
+                    {
+                        _context.Update(country);
+                        await _context.SaveChangesAsync();
+                        _flashMessage.Info("Registro actualizado.");
+                    }
+                    return Json(new 
+                    { 
+                        isValid = true, 
+                        html = ModalHelper.RenderRazorViewToString(
+                            this, 
+                            "_ViewAll", 
+                            _context.Countries
+                                .Include(c => c.States)
+                                .ThenInclude(s => s.Cities)
+                                .ToList()) 
+                    });
+                }
+                catch (DbUpdateException dbUpdateException)
+                {
+                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
+                    {
+                        _flashMessage.Danger("Ya existe un país con el mismo nombre.");
+                    }
+                    else
+                    {
+                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    _flashMessage.Danger(exception.Message);
+                }
+            }
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddOrEdit", country) });
         }
 
         // GET: Country/Details/5
@@ -51,151 +155,10 @@ namespace TSShopping.Controllers.Entities
 
             return View(model);
         }
-
-        // GET: Country/Create
-        public IActionResult Create()
+        
+        [NoDirectAccess]
+        public async Task<IActionResult> AddState(int id)
         {
-            return View();
-        }
-
-        // POST: Country/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Country country)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(country);
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));                    
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
-                    {
-                        _flashMessage.Danger("Ya existe un país con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger(exception.Message);
-                }
-            }
-            return View(country);
-        }
-
-        // GET: Country/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Countries == null)
-            {
-                return NotFound();
-            }
-
-            Country country = await _context.Countries.FindAsync(id);
-
-            if (country == null)
-            {
-                return NotFound();
-            }
-
-            return View(country);
-        }
-
-        // POST: Country/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Country country)
-        {
-            if (id != country.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(country);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index)); 
-                }
-                catch (DbUpdateException dbUpdateException)
-                {
-                    if (dbUpdateException.InnerException.Message.Contains("duplica"))
-                    {
-                        _flashMessage.Danger("Ya existe un país con el mismo nombre.");
-                    }
-                    else
-                    {
-                        _flashMessage.Danger(dbUpdateException.InnerException.Message);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _flashMessage.Danger(exception.Message);
-                }
-            }
-            return View(country);
-        }
-
-        // GET: Country/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Countries == null)
-            {
-                return NotFound();
-            }
-
-            Country country = await _context.Countries.Include(x=>x.States)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (country == null)
-            {
-                return NotFound();
-            }
-
-            return View(country);
-        }
-
-        // POST: Country/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Countries == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Countries'  is null.");
-            }
-
-            Country country = await _context.Countries.FindAsync(id);
-            
-            if (country != null)
-            {
-                _context.Countries.Remove(country);
-            }
-                        
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        public async Task<IActionResult> AddState(int? id)
-        {
-            if (id == null || _context.Countries == null)
-            {
-                return NotFound();
-            }
-
             var country = await _context.Countries.FindAsync(id);
 
             if (country == null)
@@ -225,12 +188,17 @@ namespace TSShopping.Controllers.Entities
                     Name=model.Name
                 };
 
-                _context.Add(state);
                 
                 try
                 {
+                    _context.Add(state);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details),new {id=model.CountryId});                    
+                    Country country = await _context.Countries
+                        .Include(c => c.States)
+                        .ThenInclude(s => s.Cities)
+                        .FirstOrDefaultAsync(c => c.Id == model.CountryId);
+                    _flashMessage.Info("Registro creado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllStates", country) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -248,10 +216,12 @@ namespace TSShopping.Controllers.Entities
                     _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddState", model) });
         }
 
         // GET: Country/EditState/5
+        [NoDirectAccess]
         public async Task<IActionResult> EditState(int? id)
         {
             if (id == null || _context.Countries == null)
@@ -281,9 +251,9 @@ namespace TSShopping.Controllers.Entities
         // POST: Country/EditState/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditState(int id, StateViewModel state)
+        public async Task<IActionResult> EditState(int id, StateViewModel model)
         {
-            if (id != state.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
@@ -292,15 +262,21 @@ namespace TSShopping.Controllers.Entities
             {
                 try
                 {
-                    State model=new State()
-                    {
-                        Id=state.Id,
-                        Name=state.Name,
-
+                    State state=new(){
+                        Id=model.Id,
+                        Name=model.Name,
                     };
-                    _context.Update(model);
+
+                    _context.Update(state);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Details), new{id=state.CountryId});
+
+                    Country country = await _context.Countries
+                        .Include(c => c.States)
+                        .ThenInclude(s => s.Cities)
+                        .FirstOrDefaultAsync(c => c.Id == model.CountryId);
+                    _flashMessage.Confirmation("Registro actualizado");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllStates", country) });                        
+
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -318,7 +294,8 @@ namespace TSShopping.Controllers.Entities
                     _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(state);
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditState", model) });
         }
 
         // GET: Country/DetailsState/5
@@ -345,52 +322,37 @@ namespace TSShopping.Controllers.Entities
         // GET: Country/DeleteState/5
         public async Task<IActionResult> DeleteState(int? id)
         {
-            if (id == null || _context.States == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            State state = await _context.States.Include(s=>s.Country)
-                        .FirstOrDefaultAsync(s=>s.Id==id);
-
+            State state = await _context.States
+                .Include(s => s.Country)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (state == null)
             {
                 return NotFound();
             }
 
-            return View(state);
-        }
-
-        // POST: Country/DeleteState/5
-        [HttpPost, ActionName("DeleteState")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteStateConfirmed(int id)
-        {
-            if (_context.States == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Countries'  is null.");
-            }
-
-            State state = await _context.States.Include(s=>s.Country).FirstOrDefaultAsync(s=>s.Id==id);
-            
-            if (state != null)
+            try
             {
                 _context.States.Remove(state);
+                await _context.SaveChangesAsync();
+                _flashMessage.Info("Registro borrado.");
             }
-                        
-            await _context.SaveChangesAsync();
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar el estado / departamento porque tiene registros relacionados.");
+            }
 
-            return RedirectToAction(nameof(Details),new {id=state.Country.Id});
+            return RedirectToAction(nameof(Details), new { Id = state.Country.Id });
         }
 
         // GET: Country/AddCity/5
-        public async Task<IActionResult> AddCity(int? id)
+        [NoDirectAccess]
+        public async Task<IActionResult> AddCity(int id)
         {
-            if (id == null || _context.States == null)
-            {
-                return NotFound();
-            }
-
             State state = await _context.States.FindAsync(id);
 
             if (state == null)
@@ -412,18 +374,21 @@ namespace TSShopping.Controllers.Entities
         {
             if (ModelState.IsValid)
             {
+                State state = await _context.States.FindAsync(model.StateId);
                 City city=new City()
                 {
                     Name=model.Name,
-                    State=await _context.States.FirstOrDefaultAsync(s=>s.Id==model.StateId)
+                    State=state
                 };
-
-                _context.Add(city);
                 
                 try
                 {
+                    _context.Add(city);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsState),new {id = model.StateId});                    
+                    state = await _context.States
+                        .Include(s => s.Cities)
+                        .FirstOrDefaultAsync(c => c.Id == model.StateId);
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllCities", state) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -441,10 +406,12 @@ namespace TSShopping.Controllers.Entities
                     _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(model);
+
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "AddCity", model) });
         }
 
         // GET: Country/EditCity/5
+        [NoDirectAccess]
         public async Task<IActionResult> EditCity(int? id)
         {
             if (id == null || _context.States == null)
@@ -474,25 +441,29 @@ namespace TSShopping.Controllers.Entities
         // POST: Country/EditCity/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCity(int id, CityViewModel city)
+        public async Task<IActionResult> EditCity(int id, CityViewModel model)
         {
-            if (id != city.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                City model=new City()
+                City city=new City()
                 {
-                    Id=city.Id,
-                    Name=city.Name,
+                    Id=model.Id,
+                    Name=model.Name,
                 };
                 try
                 {
-                    _context.Update(model);
+                    _context.Update(city);
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(DetailsState), new{id=city.StateId});
+                    State state = await _context.States
+                        .Include(s => s.Cities)
+                        .FirstOrDefaultAsync(c => c.Id == model.StateId);
+                    _flashMessage.Confirmation("Registro actualizado.");
+                    return Json(new { isValid = true, html = ModalHelper.RenderRazorViewToString(this, "_ViewAllCities", state) });
                 }
                 catch (DbUpdateException dbUpdateException)
                 {
@@ -510,29 +481,9 @@ namespace TSShopping.Controllers.Entities
                     _flashMessage.Danger(exception.Message);
                 }
             }
-            return View(city);
+            return Json(new { isValid = false, html = ModalHelper.RenderRazorViewToString(this, "EditCity", model) });
         }
         
-        // GET: Country/DetailsCity/5
-        public async Task<IActionResult> DetailsCity(int? id)
-        {
-            if (id == null || _context.States == null)
-            {
-                return NotFound();
-            }
-
-            City model = await _context.Cities
-                .Include(c=>c.State)
-                .FirstOrDefaultAsync(c => c.Id == id);
-                
-            if (model == null)
-            {
-                return NotFound();
-            }
-
-            return View(model);
-        }
-
         // GET: Country/DeleteCity/5
         public async Task<IActionResult> DeleteCity(int? id)
         {
@@ -541,38 +492,28 @@ namespace TSShopping.Controllers.Entities
                 return NotFound();
             }
 
-            City city = await _context.Cities.Include(x=>x.State)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            City city = await _context.Cities
+                            .Include(x=>x.State)
+                            .FirstOrDefaultAsync(c => c.Id == id);
 
             if (city == null)
             {
                 return NotFound();
             }
 
-            return View(city);
-        }
-
-        // POST: Country/DeleteCity/5
-        [HttpPost, ActionName("DeleteCity")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteCityConfirmed(int id)
-        {
-            if (_context.Cities == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Countries'  is null.");
-            }
-
-            City city = await _context.Cities.Include(c=>c.State).FirstOrDefaultAsync(c=>c.Id== id);
-            
-            if (city != null)
+            try
             {
                 _context.Cities.Remove(city);
+                await _context.SaveChangesAsync();
             }
-                        
-            await _context.SaveChangesAsync();
-            
-            return RedirectToAction(nameof(Index),new {id=city.State.Id});
-        }
+            catch
+            {
+                _flashMessage.Danger("No se puede borrar la ciudad porque tiene registros relacionados.");
+            }
 
+            _flashMessage.Info("Registro borrado.");
+
+            return RedirectToAction(nameof(DetailsState), new { Id = city.State.Id });
+        }
     }
 }
